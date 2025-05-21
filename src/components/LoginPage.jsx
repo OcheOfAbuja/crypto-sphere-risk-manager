@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
-import { useNavigate, Link } from 'react-router-dom'; // <--- Ensure useNavigate is imported
-import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
@@ -11,8 +10,8 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const { login, googleSignup } = useAuth(); // Get login from AuthContext
-  const navigate = useNavigate(); // <--- Get navigate from react-router-dom directly
+  const { login, googleSignup } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedEmailOrUsername = localStorage.getItem('rememberedEmailOrUsername');
@@ -37,47 +36,44 @@ function LoginPage() {
 
   // components/LoginPage.jsx
 // ...
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoginError('');
-    try {
-        console.log('LoginPage: Attempting login with:', { identifier: emailOrUsername });
-        // CALL THE AUTH CONTEXT LOGIN FUNCTION DIRECTLY WITH USER INPUTS
-        const response = await login(emailOrUsername, password); // <--- CORRECTED LINE
-        console.log('LoginPage: AuthContext login function completed. Response data:', response.data);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoginError('');
+  try {
+    console.log('LoginPage: Attempting login with:', { identifier: emailOrUsername });
+    // CALL THE AUTH CONTEXT LOGIN FUNCTION DIRECTLY WITH USER INPUTS
+    const response = await login(emailOrUsername, password); // <--- CORRECTED LINE
+    console.log('LoginPage: AuthContext login function completed. Response data:', response.data);
+    // Now, perform the navigation AFTER the state update in AuthContext
+    console.log('LoginPage: Calling navigate to /dashboard...');
+    navigate('/dashboard'); 
+    console.log('LoginPage: navigate("/dashboard") has been called.');
 
-        // Now, perform the navigation AFTER the state update in AuthContext
-        console.log('LoginPage: Calling navigate to /dashboard...');
-        navigate('/dashboard'); 
-        console.log('LoginPage: navigate("/dashboard") has been called.');
+  if (rememberMe) {
+    localStorage.setItem('rememberedEmailOrUsername', emailOrUsername);
+  } else {
+    localStorage.removeItem('rememberedEmailOrUsername');
+  }
+  } catch (error) {
+    console.error('LoginPage: Login failed:', error.response?.data?.error || error.message);
+    setLoginError(error.response?.data?.error || 'Login failed. Please try again.');
+  }
+};
 
-        if (rememberMe) {
-            localStorage.setItem('rememberedEmailOrUsername', emailOrUsername);
-        } else {
-            localStorage.removeItem('rememberedEmailOrUsername');
-        }
-    } catch (error) {
-        console.error('LoginPage: Login failed:', error.response?.data?.error || error.message);
-        setLoginError(error.response?.data?.error || 'Login failed. Please try again.');
-    }
-  };
 // components/LoginPage.jsx
-// ...
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const googleToken = tokenResponse.access_token;
-        // Use the googleSignup function from AuthContext
-        await googleSignup(googleToken); // <--- Assuming you also destructure googleSignup from useAuth()
-        navigate('/dashboard');
-      } catch (error) {
-        console.error('Google login failed:', error.response?.data?.message || error.message);
-        setLoginError(error.response?.data?.message || 'Google login failed. Please try again.');
-      }
-    },
+const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      const googleToken = tokenResponse.access_token;
+      // Use the googleSignup function from AuthContext
+      await googleSignup(googleToken);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Google login failed:', error.response?.data?.message || error.message);
+      setLoginError(error.response?.data?.message || 'Google login failed. Please try again.');
+    }
+  },
 });
-// ...
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

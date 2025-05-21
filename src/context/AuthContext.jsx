@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../axiosConfig'; 
 
 const AuthContext = createContext(null);
 
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       console.log('AuthContext: Attempting login for identifier:', identifier);
-      const response = await axios.post('http://localhost:5001/api/login', { identifier, password }); // Changed payload key
+       const response = await axiosInstance.post('/api/login', { identifier, password });
       const { token: loginToken, user: loginUser } = response.data;
       
       setToken(loginToken);
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
       // If your backend /logout requires a token, send it. If not, simplify this call.
       // Ensure the token exists before sending it for logout
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.post('http://localhost:5001/api/logout', {}, { headers });
+      const response = await axiosInstance.post('/api/logout', {}, { headers });
       console.log('AuthContext: Backend logout successful:', response.data.message);
     } catch (error) {
       console.error('AuthContext: Error during backend logout:', error.response?.data?.message || error.message);
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true); 
     try {
       console.log('AuthContext: Attempting signup for username:', username, 'email:', email);
-      const response = await axios.post('http://localhost:5001/api/signup', { username, email, password });
+      const response = await axiosInstance.post('/api/signup', { username, email, password });
       const { token: signupToken, user: signupUser } = response.data;
       
       setToken(signupToken);
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true); 
     try {
       console.log('AuthContext: Attempting Google signup/login with token...');
-      const response = await axios.post('http://localhost:5001/api/google-signup', { token: googleToken });
+      const response = await axiosInstance.post('/api/google-signup', { token: googleToken });
       const { token: googleTokenResponse, user: googleUser } = response.data;
       
       setToken(googleTokenResponse);

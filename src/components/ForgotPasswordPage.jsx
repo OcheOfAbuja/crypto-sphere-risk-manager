@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import axiosInstance from '../api';
+import axiosInstance from '../axiosConfig';
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
