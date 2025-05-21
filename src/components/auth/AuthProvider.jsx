@@ -17,11 +17,9 @@ const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Simulate checking for an existing session (e.g., token in localStorage)
     const token = localStorage.getItem('authToken');
     if (token) {
-      // Simulate a logged-in user
-      setUser({ name: 'John Doe', email: 'john.doe@example.com' }); // Or get user data from token
+      setUser({ name: 'John Doe', email: 'john.doe@example.com' });
     }
     setLoading(false);
   }, []);
@@ -30,7 +28,6 @@ const AuthProvider = ({ children }) => {
     user,
     loading,
     signUp: async (email, password) => {
-      // Simulate a successful signup
       console.log('Simulating sign up for ', email, password);
       localStorage.setItem('authToken', 'fake-auth-token');
       const fakeUser = { name: 'John Doe', email };
@@ -38,7 +35,6 @@ const AuthProvider = ({ children }) => {
       return { user: fakeUser };
     },
     signIn: async (email, password) => {
-      // Simulate a successful signin
       console.log('Simulating sign in for ', email, password);
       localStorage.setItem('authToken', 'fake-auth-token');
       const fakeUser = { name: 'John Doe', email };

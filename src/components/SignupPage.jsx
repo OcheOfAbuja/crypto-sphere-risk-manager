@@ -26,8 +26,8 @@ function SignUpPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear any previous errors
-    console.log('SignUpPage - handleSubmit called'); // ADDED
+    setError(''); 
+    console.log('SignUpPage - handleSubmit called'); 
     console.log('SignUpPage - Form data:', { username, email, password }); // ADDED
     try {
       await signup(username, email, password); // Include username in the signup call

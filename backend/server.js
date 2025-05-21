@@ -10,19 +10,22 @@ require('dotenv').config();
 
 
 const app = express();
-const port = 5001;
-
+const DEPLOYED_FRONTEND_URL = process.env.DEPLOYED_FRONTEND_URL || 'https://682d2442f6e177523f1f9e8a--crypto-sphere-risk-manager.netlify.app';
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin:[
+     'http://localhost:5173',
+     DEPLOYED_FRONTEND_URL
+  ].filter(Boolean),
   methods: 'GET,HEAD,PUT,POST,DELETE,PATCH',
   credentials: true,
 }));
 app.use(express.json());
 
 const client = new OAuth2Client();
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '481025084065-272jm543jslcjd3ic6bnqb6gl1vmkt56.apps.googleusercontent.com';
-const JWT_SECRET = process.env.JWT_SECRET || 'fbc409845a3c055518fca8820197331c25002c88aae19a2b13ab368b322b0932';
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const JWT_SECRET = process.env.JWT_SECRET;
+
 
 const activationCodes = ['12345678'];
 const usedActivationCodes = new Set();
@@ -32,8 +35,6 @@ const db = new sqlite3.Database('./users.db', (err) => {
         console.error('Could not connect to database', err);
     } else {
         console.log('Connected to database');
-
-        // Step 1: Create the 'users' table (now includes username directly)
         db.run(`
             CREATE TABLE IF NOT EXISTS users (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,9 +47,6 @@ const db = new sqlite3.Database('./users.db', (err) => {
                 console.error('Error creating users table:', createTableErr);
             } else {
                 console.log('Users table checked/created.');
-
-                // Step 2: Directly proceed to creating 'password_reset_tokens' table
-                // WITHOUT any ALTER TABLE in between!
                 db.run(`
                     CREATE TABLE IF NOT EXISTS password_reset_tokens (
                       token TEXT PRIMARY KEY,
@@ -72,7 +70,7 @@ async function verifyGoogleToken(token) {
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: CLIENT_ID || "481025084065-272jm543jslcjd3ic6bnqb6gl1vmkt56.apps.googleusercontent.com"
+      audience: CLIENT_ID
     });
     const payload = ticket.getPayload();
     const userid = payload['sub'];
@@ -83,22 +81,21 @@ async function verifyGoogleToken(token) {
   }
 }
 
-// Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (token == null) return res.sendStatus(401); // No token
+  if (token == null) return res.sendStatus(401);
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403); // Invalid token
-    req.user = user; // Attach user payload to the request
-    next(); // Proceed to the next middleware or route handler
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
   });
 };
 
 function generateAuthToken(userId) {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' }); // Token expires in 1 hour
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' }); 
 }
 
 app.post('/api/verify-google-token', async (req, res) => {
@@ -124,10 +121,10 @@ app.post('/api/google-login', async (req, res) => {
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: YOUR_GOOGLE_CLIENT_ID || '481025084065-272jm543jslcjd3ic6bnqb6gl1vmkt56.apps.googleusercontent.com' // Replace with your client ID
+      audience: CLIENT_ID 
     });
     const payload = ticket.getPayload();
-    console.log('Google Payload:', payload); // Inspect the payload
+    console.log('Google Payload:', payload);
 
     const googleName = payload?.name;
     const googleEmail = payload?.email;
@@ -136,9 +133,6 @@ app.post('/api/google-login', async (req, res) => {
       return res.status(400).json({ message: 'Could not retrieve user information from Google' });
     }
 
-    // Here you would typically check if the user exists in your database
-    // and either log them in or create a new user.
-    // For this example, we'll just send back some user info.
    db.get('SELECT id, email FROM users WHERE email = ?', [googleEmail], async (err, existingUser) => {
       if (err) {
         console.error('Database error during Google login:', err);
@@ -149,23 +143,27 @@ app.post('/api/google-login', async (req, res) => {
       if (existingUser) {
         userId = existingUser.id;
         console.log(`Google user ${googleEmail} found.`);
+        const authToken = generateAuthToken(userId);
+        const userData = { id: userId, email: googleEmail, name: googleName };
+        return res.json({ token: authToken, user: userData });
       } else {
-        // **If the user doesn't exist, create a new user in your database**
-        db.run('INSERT INTO users (email, password) VALUES (?, ?)', [googleEmail, 'google_login_no_password'], function(err) {
+          const generatedUsername = googleEmail.split('@')[0];
+        db.run('INSERT INTO users (email, password, username) VALUES (?, ?, ?)', [googleEmail, 'google_login_no_password', generatedUsername], function(err) {
           if (err) {
             console.error('Error creating Google user:', err);
+            if (err.message.includes('UNIQUE constraint failed: users.username')) {
+              return res.status(409).json({ message: 'Username already taken. Please try with a different Google account or contact support.' });
+            }
             return res.status(500).json({ message: 'Could not create Google user' });
           }
           userId = this.lastID;
           console.log(`New Google user created with ID: ${userId}`);
+          const authToken = generateAuthToken(userId);
+          const userData = { id: userId, email: googleEmail, name: googleName };
+          return res.json({ token: authToken, user: userData });
         });
+        return;
       }
-
-      // **Generate a JWT for the logged-in/new Google user**
-      const authToken = generateAuthToken(userId);
-      const userData = { id: userId, email: googleEmail, name: googleName }; // Include name if you want
-      return res.json({ token: authToken, user: userData });
-
     });
 
   } catch (error) {
@@ -217,12 +215,12 @@ app.post('/api/calculate-order-value', (req, res) => {
 });
 
 function generateAuthToken(userId) {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' }); // Token expires in 1 hour
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
 }
 
 app.post('/api/login', async (req, res) => {
   console.log('*** /api/login route hit! ***');
-  const { identifier, password } = req.body; // Expecting 'email' now
+  const { identifier, password } = req.body; 
 
   if (!identifier || !password) {
     return res.status(400).json({ error: 'Please provide both email and password.' });
@@ -244,9 +242,9 @@ app.post('/api/login', async (req, res) => {
 
       if (passwordMatch) {
         console.log(`User ${user.email} (username: ${user.username}) logged in successfully.`);
-        const token = generateAuthToken(user.id); // Implement your token generation function
+        const token = generateAuthToken(user.id);
         const userData = { id: user.id, email: user.email, username: user.username };
-        return res.status(200).json({ message: 'Login successful!', token, user: userData }); // Sending token and user
+        return res.status(200).json({ message: 'Login successful!', token, user: userData });
       } else {
         return res.status(401).json({ error: 'Invalid email/username or password.' });
       }
@@ -259,12 +257,10 @@ app.post('/api/login', async (req, res) => {
 
 
 app.post('/api/logout', (req, res) => {
-  // Get the token from the request (e.g., Authorization header)
-  const token = req.headers.authorization?.split(' ')[1]; // Assuming Bearer token
+  const token = req.headers.authorization?.split(' ')[1]; 
 
   if (token) {
-    console.log(`User logged out with token: ${token.substring(0, 10)}...`); // Basic logging
-    // In the future, you might add token blacklisting logic here
+    console.log(`User logged out with token: ${token.substring(0, 10)}...`);
   }
 
   res.status(200).json({ message: 'Logout successful' });
@@ -285,25 +281,21 @@ app.post('/api/forgot-password', async (req, res) => {
       }
 
       if (!user) {
-        // For security, don't reveal if the email exists
         return res.status(200).json({ message: 'If an account with that email exists, a reset link has been sent.' });
       }
-
-      // Generate a unique reset token
       const resetToken = crypto.randomBytes(32).toString('hex');
-      const expiresAt = Date.now() + 3600000; // Token expires in 1 hour
-
-      // Save the token to the database
+      const expiresAt = Date.now() + 3600000;
       db.run('INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)', [resetToken, user.id, expiresAt], (err) => {
         if (err) {
           console.error('Error saving reset token:', err);
           return res.status(500).json({ error: 'Could not save reset token.' });
         }
 
-        const resetLink = `http://localhost:5173/reset-password/${resetToken}`; // Adjust your frontend URL
+        const DEPLOYED_FRONTEND_URL = process.env.DEPLOYED_FRONTEND_URL || 'http://localhost:5173'; // Fallback for local
+        const resetLink = `${DEPLOYED_FRONTEND_URL}/reset-password/${resetToken}`;
 
         const mailOptions = {
-          from: 'your-email@example.com', // Use your configured email
+          from: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER, // Use a specific env var, or fallback to user
           to: user.email,
           subject: 'Password Reset Request',
           html: `<p>You have requested a password reset for your account.</p><p>Click the following link to reset your password:</p><a href="${resetLink}">${resetLink}</a><p>This link will expire in 1 hour.</p><p>If you did not request this, please ignore this email.</p>`,
@@ -326,12 +318,12 @@ app.post('/api/forgot-password', async (req, res) => {
 });
 
 app.post('/api/signup', async (req, res) => {
-  console.log('*** /api/signup route hit! ***'); // ADDED
-  console.log('*** /api/signup request body:', req.body); // ADDED
+  console.log('*** /api/signup route hit! ***'); 
+  console.log('*** /api/signup request body:', req.body); 
 
-  const { email, password, username } = req.body; // Assuming you're also sending username
+  const { email, password, username } = req.body; 
 
-  if (!email || !password || !username) { // Updated validation to include username
+  if (!email || !password || !username) { 
     return res.status(400).json({ error: 'Please provide email, password, and username.' });
   }
 
@@ -366,12 +358,8 @@ app.post('/api/signup', async (req, res) => {
                 }
                 const userId = this.lastID;
                 console.log(`User created with ID: ${userId}`);
-
-                // **Generate an authentication token for the newly signed up user**
                 const token = generateAuthToken(userId);
-                const userData = { id: userId, email: email, username: username }; // Include username if needed
-
-                // **Send the token and user data back to the client**
+                const userData = { id: userId, email: email, username: username }; 
                 return res.status(201).json({ message: 'Signup successful!', token, user: userData });
             });
         });
@@ -381,74 +369,16 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-app.post('/api/forgot-password', async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: 'Please provide your email address.' });
-  }
-
-  try {
-    db.get('SELECT id, email FROM users WHERE email = ?', [email], async (err, user) => {
-      if (err) {
-        console.error('Database error during forgot password:', err);
-        return res.status(500).json({ error: 'Database error.' });
-      }
-
-      if (!user) {
-        // For security, don't reveal if the email exists
-        return res.status(200).json({ message: 'If an account with that email exists, a reset link has been sent.' });
-      }
-
-      // Generate a unique reset token
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const expiresAt = Date.now() + 3600000; // Token expires in 1 hour
-
-      // Save the token to the database
-      db.run('INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)', [resetToken, user.id, expiresAt], (err) => {
-        if (err) {
-          console.error('Error saving reset token:', err);
-          return res.status(500).json({ error: 'Could not save reset token.' });
-        }
-
-        const resetLink = `http://localhost:5173/reset-password/${resetToken}`; // Adjust your frontend URL
-
-        const mailOptions = {
-          from: 'your-email@example.com', // Use your configured email
-          to: user.email,
-          subject: 'Password Reset Request',
-          html: `<p>You have requested a password reset for your account.</p><p>Click the following link to reset your password:</p><a href="${resetLink}">${resetLink}</a><p>This link will expire in 1 hour.</p><p>If you did not request this, please ignore this email.</p>`,
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error('Error sending reset email:', error);
-            return res.status(500).json({ error: 'Failed to send reset email.' });
-          }
-          console.log('Reset email sent:', info.response);
-          res.status(200).json({ message: 'If an account with that email exists, a reset link has been sent.' });
-        });
-      });
-    });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Something went wrong. Please try again.' });
-  }
-});
-
 app.post('/api/verify-reset-token', (req, res) => {
   const { token } = req.body;
-
   if (!token) {
     return res.status(400).json({ error: 'No reset token provided.' });
   }
-
   db.get('SELECT token FROM password_reset_tokens WHERE token = ? AND expires_at > ?', [token, Date.now()], (err, row) => {
     if (err) {
       console.error('Error verifying reset token:', err);
       return res.status(500).json({ error: 'Database error.' });
     }
-
     if (row) {
       res.status(200).json({ valid: true });
     } else {
@@ -488,11 +418,9 @@ app.post('/api/reset-password', async (req, res) => {
           return res.status(500).json({ error: 'Could not update password.' });
         }
 
-        // Delete the used reset token
         db.run('DELETE FROM password_reset_tokens WHERE token = ?', [token], (err) => {
           if (err) {
             console.error('Error deleting reset token:', err);
-            // It's generally okay if this fails, the password was still reset
           }
           res.status(200).json({ message: 'Password reset successfully!' });
         });
@@ -504,16 +432,15 @@ app.post('/api/reset-password', async (req, res) => {
   }
 });
 
-
-// Configure email transporter (replace with your email service details)
 const transporter = nodemailer.createTransport({
-  service: 'your-email-service', // e.g., 'Gmail'
+  service: process.env.EMAIL_SERVICE || 'Gmail', 
   auth: {
-    user: 'your-email@example.com',
-    pass: 'bzdk tfpc qsrg gmtv'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   },
 });
 
-app.listen(5001, () => {
-  console.log(`Server listening on port ${port}`);
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });

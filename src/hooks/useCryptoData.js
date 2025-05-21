@@ -51,6 +51,4 @@ export const useCoinDetails = (coinId) => {
   }, [coinId]);
 
   return { coin, loading, error };
-};
-
-// Add more hooks as needed     
+};    

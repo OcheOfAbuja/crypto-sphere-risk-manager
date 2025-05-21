@@ -13,8 +13,7 @@ export async function getCryptoPrice(cryptoId) {
 }
 
 export async function fetchHistory(token) {
-  // This would connect to your backend
-  // For now, return mock data
+ 
   return [
     {
       date: new Date(),

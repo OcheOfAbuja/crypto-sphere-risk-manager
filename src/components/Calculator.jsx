@@ -48,7 +48,6 @@ const Sidebar = () => {
             <nav className="mt-8">
                 <ul className="space-y-2">
                     <li>
-                        {/* Change <a> tags to <Link> components for client-side routing */}
                         <Link to="/dashboard" className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md">
                             <Activity className="mr-2 h-4 w-4" />
                             Dashboard

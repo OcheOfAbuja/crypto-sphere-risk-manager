@@ -13,7 +13,6 @@ import {
     Calendar,
     Cloud,
 } from 'lucide-react';
-//import { TfiWorld } from "react-icons/tfi";
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -28,7 +27,7 @@ const Dashboard = () => {
     
 
     const { user, logout, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
   useEffect(() => {
     console.log('Dashboard mounted, isAuthenticated:', isAuthenticated);
@@ -134,18 +133,19 @@ const Dashboard = () => {
             <div className="h-12 w-12 rounded-full overflow-hidden mb-4">
               <img src="bitcon.png" alt="logo" className="h-full w-full object-cover" />
             </div>
-            {user ? (
-              <>
-                <h1 className="text-xl font-semibold">{user.name}</h1>
-                <p className="text-gray-400 text-sm">{user.email}</p>
-              </>
-            ) : (
-              <>
-                <h1 className="text-xl font-semibold">Guest</h1> {/* Or some default name */}
-                <p className="text-gray-400 text-sm">Not logged in</p> {/* Or some default email/status */}
-              </>
-            )}
-          </div>
+                {/* Display actual user info from context */}
+                {user ? (
+                    <>
+                        <h1 className="text-xl font-semibold">{user.username || user.name}</h1>
+                        <p className="text-gray-400 text-sm">{user.email}</p>
+                    </>
+                ) : (
+                    <>
+                        <h1 className="text-xl font-semibold">Guest</h1>
+                        <p className="text-gray-400 text-sm">Not logged in</p>
+                    </>
+                )}
+            </div>
                 <nav className="mt-8">
                     <ul className="space-y-2">
                         <li>

@@ -8,7 +8,7 @@ function ResetPasswordPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [tokenValid, setTokenValid] = useState(false);
-  const { token } = useParams(); // Get the token from the URL
+  const { token } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,7 +56,7 @@ function ResetPasswordPage() {
       setMessage(response.data.message || 'Password reset successfully!');
       // Optionally, redirect the user to the login page after a short delay
       setTimeout(() => {
-        navigate('/login');
+        navigate('/');
       }, 2000);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to reset password. Please try again.');

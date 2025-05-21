@@ -6,7 +6,7 @@ import SignupPage from './components/SignupPage';
 import Calculator from './components/Calculator';
 import Profile from './components/Profile';
 import Wallet from './components/Wallet';
-import History from './components/History'; // Import History component
+import History from './components/History'; 
 import Footer from './components/Footer';
 import Settings from './components/Settings';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
@@ -24,7 +24,7 @@ function App() {
       <Route path="/history" element={<History />} />
       <Route path="/settings" element={<Settings />} />
       <Route path='/forgetpasswordpage' element={<ForgotPasswordPage />} />
-      <Route path='/resetpasswordpage' element={<ResetPasswordPage />} />
+      <Route path='/reset-password/:token' element={<ResetPasswordPage />} />
     </Routes>
   );
 }

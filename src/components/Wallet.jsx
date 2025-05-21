@@ -12,7 +12,6 @@ import {
     Wallet as WalletIcon, 
     TrendingUp,
     Users,
-    Settings,
     LogOut,
     Cloud 
 } from 'lucide-react';
@@ -68,7 +67,7 @@ const Wallet = () => {
     const handleLogout = async () => {
         console.log('Logout button clicked in Sidebar!');
         await logout(); // Call the logout function from AuthContext
-        navigate('/'); // Navigate to the home/login page after logout
+        navigate('/'); 
         console.log('Sidebar: Navigated to / after logout.');
     };
 
@@ -317,14 +316,14 @@ const Wallet = () => {
                             </Link>
                         </li>
                         <li>
-                                                <button
-                                                    onClick={handleLogout} 
-                                                    className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md cursor-pointer"
-                                                >
-                                                    <LogOut className="mr-2 h-4 w-4" />
-                                                    Logout
-                                                </button>
-                                            </li>
+                            <button
+                                onClick={handleLogout} 
+                                className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md cursor-pointer"
+                            >
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Logout
+                            </button>
+                        </li>
                     </ul>
                 </nav>
                 <div className="absolute bottom-4 left-4">

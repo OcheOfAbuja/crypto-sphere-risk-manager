@@ -1,4 +1,3 @@
-// context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
@@ -23,7 +22,6 @@ export const AuthProvider = ({ children }) => {
         console.log('AuthContext - First useEffect - Token and user loaded from localStorage:', storedToken?.substring(0, 10) + '...', JSON.parse(storedUser));
       } catch (e) {
         console.error('AuthContext - Error parsing stored user data:', e);
-        // Clear invalid stored data
         localStorage.removeItem('user');
         localStorage.removeItem('token');
       }
@@ -32,7 +30,6 @@ export const AuthProvider = ({ children }) => {
     console.log('AuthContext - First useEffect - Loading set to false');
   }, []);
 
-  // Effect to save token and user to localStorage whenever they change
   useEffect(() => {
     console.log('AuthContext - Second useEffect (token or user changed)', token, user);
     if (token) {
@@ -44,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user)); // Ensure user is stringified
+      localStorage.setItem('user', JSON.stringify(user));
       console.log('AuthContext - Second useEffect - User saved to localStorage:', user);
     } else {
       localStorage.removeItem('user');
@@ -52,10 +49,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token, user]);
 
-  // --- LOGIN FUNCTION UPDATE ---
-  // It should accept 'identifier' (email or username)
-  // It should NOT handle navigation, let the component handle it.
-  const login = async (identifier, password) => { // Changed parameter name
+  const login = async (identifier, password) => { 
     setLoading(true);
     try {
       console.log('AuthContext: Attempting login for identifier:', identifier);
@@ -73,13 +67,12 @@ export const AuthProvider = ({ children }) => {
       setToken(null);
       setUser(null);
       setLoading(false);
-      throw error; // Re-throw error so the component can catch and display message
+      throw error; 
     }
   };
 
   const logout = async () => {
     console.log('AuthContext: Logout initiated.');
-    // Clear local state and storage first for immediate UI update
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
@@ -102,7 +95,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signup = async (username, email, password) => {
-    setLoading(true); // Optional: show loading during signup
+    setLoading(true); 
     try {
       console.log('AuthContext: Attempting signup for username:', username, 'email:', email);
       const response = await axios.post('http://localhost:5001/api/signup', { username, email, password });
@@ -116,13 +109,13 @@ export const AuthProvider = ({ children }) => {
       return response;
     } catch (error) {
       console.error('AuthContext: Signup failed:', error.response?.data?.error || error.message);
-      setLoading(false); // End loading on error
-      throw error; // Re-throw error
+      setLoading(false); 
+      throw error; 
     }
   };
 
   const googleSignup = async (googleToken) => {
-    setLoading(true); // Optional: show loading during Google signup
+    setLoading(true); 
     try {
       console.log('AuthContext: Attempting Google signup/login with token...');
       const response = await axios.post('http://localhost:5001/api/google-signup', { token: googleToken });
@@ -132,21 +125,19 @@ export const AuthProvider = ({ children }) => {
       setUser(googleUser);
       setLoading(false);
       console.log('AuthContext: Google signup/login successful, token and user set.');
-      navigate('/dashboard'); // Navigate after successful Google signup/login
+      navigate('/dashboard'); 
       return response;
     } catch (error) {
       console.error('AuthContext: Google signup/login failed:', error.response?.data?.error || error.message);
-      setLoading(false); // End loading on error
+      setLoading(false); 
       throw error;
     }
   };
 
-  // Determine authentication status based on token presence
-  const isAuthenticated = !!token && !!user; // Ensure both token and user object are present
+  const isAuthenticated = !!token && !!user; 
 
   return (
     <AuthContext.Provider value={{ user, token, loading, login, logout, signup, googleSignup, isAuthenticated }}>
-      {/* Only render children when loading is complete to prevent flashing content */}
       {!loading && children}
     </AuthContext.Provider>
   );

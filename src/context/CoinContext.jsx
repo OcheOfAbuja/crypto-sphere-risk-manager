@@ -23,7 +23,6 @@ const CoinContextProvider = (props) => {
         try {
             const response = await fetch('YOUR_EXCHANGE_RATE_API_ENDPOINT'); // Replace with your API endpoint
             const data = await response.json();
-            // Assuming your API returns rates like { rates: { EUR: 0.92, NGN: 1200 } }
             setExchangeRates({
                 USD: 1,
                 EUR: data.rates.EUR || null,
@@ -39,7 +38,7 @@ const CoinContextProvider = (props) => {
 
     useEffect(() => {
         fetchExchangeRates();
-    }, []); // Fetch exchange rates on component mount
+    }, []);
 
     const updateCurrency = (newCurrencyId) => {
         let newCurrency;

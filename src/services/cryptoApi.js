@@ -1,9 +1,8 @@
-require('dotenv').config(); // Load environment variables from .env
+require('dotenv').config(); 
 import axios from 'axios';
 
 const API_BASE_URL = 'https://api.coingecko.com/api/v3';
-// If you have an API key, add it to headers
-const API_KEY = 'CG-76EEZYgRRzXJAzP727KWYQju' || ''; //hardcoded api key
+const API_KEY = 'CG-76EEZYgRRzXJAzP727KWYQju' || ''; 
 
 const api = axios.create({
     baseURL: API_BASE_URL,

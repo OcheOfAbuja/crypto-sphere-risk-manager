@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
     <GoogleOAuthProvider clientId="481025084065-272jm543jslcjd3ic6bnqb6gl1vmkt56.apps.googleusercontent.com">
       <CoinContextProvider>
-        <NavigationProvider> {/* Wrap NavigationProvider here */}
+        <NavigationProvider>
             <AuthProvider>
               <App />
             </AuthProvider>

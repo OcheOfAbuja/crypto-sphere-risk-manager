@@ -4,9 +4,9 @@ import {
     sendEmailVerification,
     signInWithEmailAndPassword,
     updatePassword,
-    signInWithPopup // Added this import, likely needed for Google Auth
+    signInWithPopup 
 } from "firebase/auth";
-import { auth } from "./firebase.config.js"; // Added .js extension to align with previous troubleshooting
+import { auth } from "./firebase.config.js";
 
 /**
  * Creates a new user with an email and password.

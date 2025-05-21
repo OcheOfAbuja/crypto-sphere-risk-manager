@@ -22,7 +22,7 @@ const Sidebar = () => {
         console.log('Logging out...');
 
         // Redirect to the login page or home page after logout
-        navigate('/'); // Assuming you have a login route
+        navigate('/');
     };
 
     return (
