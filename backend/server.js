@@ -10,15 +10,31 @@ require('dotenv').config();
 
 
 const app = express();
-const DEPLOYED_FRONTEND_URL = process.env.DEPLOYED_FRONTEND_URL || 'https://682d2442f6e177523f1f9e8a--crypto-sphere-risk-manager.netlify.app';
+const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_URL || 'https://crypto-sphere-risk-manager.netlify.app';
+
+const allowedOrigins = [
+    'http://localhost:3000', // Your local React development server (if you use create-react-app or similar)
+    'http://localhost:5173', // Your local Vite development server
+    'https://crypto-sphere-risk-manager.netlify.app', // Your primary Netlify domain
+    'https://682e6112044d460008b22ea1--crypto-sphere-risk-manager.netlify.app' // Example deploy preview URL. You might need to add other variations if they are different.
+    // If you set up a custom domain on Netlify (e.g., your-domain.com), add that too:
+    // 'https://www.your-custom-domain.com',
+    // 'https://your-custom-domain.com'
+];
 
 app.use(cors({
-  origin:[
-     'http://localhost:5173',
-     DEPLOYED_FRONTEND_URL
-  ].filter(Boolean),
-  methods: 'GET,HEAD,PUT,POST,DELETE,PATCH',
-  credentials: true,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true, // Important if your frontend sends cookies or authorization headers
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Explicitly allow methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Explicitly allow headers
 }));
 app.use(express.json());
 
@@ -290,10 +306,9 @@ app.post('/api/forgot-password', async (req, res) => {
           console.error('Error saving reset token:', err);
           return res.status(500).json({ error: 'Could not save reset token.' });
         }
-
-        const DEPLOYED_FRONTEND_URL = process.env.DEPLOYED_FRONTEND_URL || 'http://localhost:5173'; // Fallback for local
-        const resetLink = `${DEPLOYED_FRONTEND_URL}/reset-password/${resetToken}`;
-
+        
+        const resetLink = `${DEPLOYED_FRONTEND_BASE_URL}/reset-password/${resetToken}`;
+        
         const mailOptions = {
           from: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER, // Use a specific env var, or fallback to user
           to: user.email,
