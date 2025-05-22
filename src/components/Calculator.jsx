@@ -1,103 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-    Activity,
-    Calculator as CalculatorIcon,
-    Wallet as WalletIcon,
-    TrendingUp,
-    Users,
-    Settings,
-    LogOut,
-    Cloud,
-} from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const Sidebar = () => {
-
-    const { user, logout } = useAuth();
-    const navigate = useNavigate(); 
-
-    const weather = { temperature: 27, condition: "Sunny" };
-
-    const handleLogout = async () => {
-        console.log('Logout button clicked in Sidebar!');
-        await logout(); // Call the logout function from AuthContext
-        navigate('/'); // Navigate to the home/login page after logout
-        console.log('Sidebar: Navigated to / after logout.');
-    };
-
-    return (
-        <aside className="w-64 bg-gray-800 text-white flex-shrink-0 border-r border-gray-700">
-            <div className="p-4">
-                <div className="h-12 w-12 rounded-full overflow-hidden mb-4">
-                    <img src="bitcon.png" alt="logo" className="h-full w-full object-cover" />
-                </div>
-                {/* Display actual user info from context */}
-                {user ? (
-                    <>
-                        <h1 className="text-xl font-semibold">{user.username || user.name}</h1>
-                        <p className="text-gray-400 text-sm">{user.email}</p>
-                    </>
-                ) : (
-                    <>
-                        <h1 className="text-xl font-semibold">Guest</h1>
-                        <p className="text-gray-400 text-sm">Not logged in</p>
-                    </>
-                )}
-            </div>
-            <nav className="mt-8">
-                <ul className="space-y-2">
-                    <li>
-                        <Link to="/dashboard" className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md">
-                            <Activity className="mr-2 h-4 w-4" />
-                            Dashboard
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/calculator" className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md">
-                            <CalculatorIcon className="mr-2 h-4 w-4" />
-                            Calculator
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/wallet" className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md">
-                            <WalletIcon className="mr-2 h-4 w-4" />
-                            My Wallet
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/history" className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md">
-                            <TrendingUp className="mr-2 h-4 w-4" />
-                            History
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/profile" className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md">
-                            <Users className="mr-2 h-4 w-4" />
-                            Profile
-                        </Link>
-                    </li>
-
-                    <li>
-                        <button
-                            className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md cursor-pointer"
-                            onClick={handleLogout} // Attach the logout handler
-                        >
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Logout
-                        </button>
-                    </li>
-                </ul>
-            </nav>
-            <div className="absolute bottom-4 left-4">
-                <div className="flex items-center gap-2">
-                    <Cloud className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">{weather.temperature}°C {weather.condition}</span>
-                </div>
-            </div>
-        </aside>
-    );
-};
+import Sidebar from '../components/Sidebar';
+import Navbar from '../components/Navbar';
 
 const CalculatorComponent = () => {
     const [riskAmount, setRiskAmount] = useState('');
@@ -113,10 +18,10 @@ const CalculatorComponent = () => {
     const [calculationHistory, setCalculationHistory] = useState(() => {
         if (typeof window !== 'undefined') {
             const savedHistory = localStorage.getItem('calculationHistory');
-            if (savedHistory){
-                try{
+            if (savedHistory) {
+                try {
                     const parsedHistory = JSON.parse(savedHistory);
-                    return parsedHistory.map(item =>({
+                    return parsedHistory.map(item => ({
                         ...item,
                         riskAmount: Number(item.riskAmount),
                         entryPrice: Number(item.entryPrice),
@@ -132,8 +37,6 @@ const CalculatorComponent = () => {
         }
         return [];
     });
-
-    
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -178,11 +81,11 @@ const CalculatorComponent = () => {
 
             setCalculationHistory(prevHistory => [
                 {
-                    riskAmount: riskNum, 
+                    riskAmount: riskNum,
                     entryPrice: entryNum,
                     stopLossPrice: stopLossNum,
                     orderValue: newOrderValue,
-                    percentageDifference: Number(newPercentageDifference), 
+                    percentageDifference: Number(newPercentageDifference),
                     timestamp: new Date().toLocaleString(),
                 },
                 ...prevHistory,
@@ -243,13 +146,10 @@ const CalculatorComponent = () => {
     };
 
     return (
-        
         <div className="bg-white shadow-md rounded-lg p-6 space-y-6">
-            
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                Risk/Reward Calculator
-            </h2>
-
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center flex-grow">
+                Calculator Risk
+            </h1>
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                     <strong className="font-bold">Error:</strong>
@@ -372,7 +272,7 @@ const CalculatorComponent = () => {
 
             <button
                 onClick={toggleExplanation}
-                className="text-blue-500 hover:underline cursor-pointer text-sm"
+                className=" px-2 text-blue-500 hover:underline cursor-pointer text-sm"
             >
                 {showExplanation ? 'Hide Explanation' : 'Show Explanation'}
             </button>
@@ -396,7 +296,7 @@ const CalculatorComponent = () => {
             )}
 
             {/* Calculation History */}
-             <div className="mt-8 p-4 bg-white shadow rounded-md border border-gray-200">
+            <div className="mt-8 p-4 bg-white shadow rounded-md border border-gray-200">
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="text-lg font-semibold text-gray-900">Calculation History</h3>
                     <button
@@ -433,7 +333,7 @@ const CalculatorComponent = () => {
                                         </td>
                                         <td className="px-5 py-5 border-b border-gray-200 text-sm">
                                             <span className="inline-block bg-red-200 text-red-700 px-2 py-1 rounded-full text-xs font-semibold font-mono">
-                                                {record.percentageDifference}
+                                                {record.percentageDifference}%
                                             </span>
                                         </td>
                                         <td className="px-5 py-5 border-b border-gray-200 text-sm text-gray-900">{record.timestamp}</td>
@@ -457,20 +357,55 @@ const CalculatorComponent = () => {
         </div>
     );
 };
+
+// Main CalculatorPage component
 const CalculatorPage = () => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const weather = { temperature: 27, condition: "Sunny" }; 
+
+    const handleLogout = async () => {
+        console.log('Logout button clicked!');
+        await logout();
+        navigate('/');
+        console.log('CalculatorPage: Navigated to / after logout.');
+    };
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
     return (
-        <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <div className="flex-1 overflow-y-auto bg-gray-100">
-                <header className="bg-white shadow p-4">
-                    <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center mb-4">
-                    Calculator
-                </h1>
-                </header>
-                <main className="p-6 sm:p-8">
-                    <CalculatorComponent />
-                </main>
-            </div>
+        <div className="flex flex-col h-screen bg-gray-100">
+            {/* Navbar for toggle button */}
+            <Navbar setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
+
+            {/* Sidebar */}
+            <Sidebar
+                isOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
+                weather={weather}
+                user={user}
+                handleLogout={handleLogout}
+                isSidebarOpen={isSidebarOpen} 
+                setIsSidebarOpen={setIsSidebarOpen}
+
+            />
+
+            {/* Overlay for open sidebar */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={toggleSidebar} 
+                ></div>
+            )}
+
+            {/* Main Content Area */}
+            <main className="flex-1 p-6 overflow-y-auto">
+                <CalculatorComponent />
+            </main>
         </div>
     );
 };

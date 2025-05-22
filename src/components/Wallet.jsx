@@ -1,38 +1,25 @@
 import React, { useState, useEffect } from 'react';
-
 import {
     ArrowUpRight,
     ArrowDownLeft,
-    Banknote,
     Loader2,
     Send,
     ListChecks,
-    Activity, 
-    Calculator,
-    Wallet as WalletIcon, 
-    TrendingUp,
-    Users,
-    LogOut,
-    Cloud 
+    X 
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
-import { useAuth } from '../context/AuthContext';
-import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from 'uuid';
+import Navbar from './Navbar';
+import Sidebar from './Sidebar';
 
 const Wallet = () => {
-
     const [balance, setBalance] = useState(() => {
         const storedBalance = localStorage.getItem('balance');
-        console.log("Initial balance loaded:", storedBalance);
         return storedBalance ? parseFloat(storedBalance) : 1000;
     });
     const [transactionHistory, setTransactionHistory] = useState(() => {
         const storedHistory = localStorage.getItem('transactionHistory');
-        console.log("Initial history loaded:", storedHistory);
         if (storedHistory) {
             try {
-                const parsedHistory = JSON.parse(storedHistory);
-                console.log("Parsed history:", parsedHistory);
                 return JSON.parse(storedHistory);
             } catch (e) {
                 console.error('Failed to parse transaction history from local storage', e);
@@ -49,27 +36,17 @@ const Wallet = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedCurrency, setSelectedCurrency] = useState('USD');
-    
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-
-    const [weather] = useState({ temperature: 25, condition: 'Sunny' }); 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const exchangeRates = { USD: 1, NGN: 750, EUR: 0.95 };
-    
     const currencySymbols = { USD: '$', NGN: '₦', EUR: '€' };
-    const cardStyle = "bg-white border border-gray-200 shadow-md rounded-md";
-    const inputStyle = "w-full bg-white border border-gray-300 text-gray-900 placeholder:text-gray-400 px-2 py-1.5 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3";
-    const buttonStyle = "w-full text-white font-semibold py-2 rounded-full transition-colors duration-300 flex items-center justify-center text-sm";
-    const selectStyle = `bg-gray-100 border border-gray-300 text-gray-900 rounded-full px-2 py-1 text-xs
-                        focus:outline-none focus:ring-2 focus:ring-blue-500`;
 
-    const handleLogout = async () => {
-        console.log('Logout button clicked in Sidebar!');
-        await logout(); // Call the logout function from AuthContext
-        navigate('/'); 
-        console.log('Sidebar: Navigated to / after logout.');
-    };
+    // Consolidated and improved Tailwind CSS classes
+    const cardStyle = "bg-white border border-gray-200 rounded-lg shadow-sm p-4";
+    const inputStyle = "w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder:text-gray-400 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3";
+    const buttonStyle = "w-full text-white font-semibold py-2 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm";
+    const selectStyle = `bg-gray-100 border border-gray-300 text-gray-800 rounded-md px-3 py-1.5 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-blue-500`;
 
     useEffect(() => {
         const storedBalance = localStorage.getItem('balance');
@@ -103,10 +80,10 @@ const Wallet = () => {
 
     const handleDeposit = () => {
         if (!depositAmount || parseFloat(depositAmount) <= 0) {
-            alert('Please enter a valid deposit amount.');
+            setError('Please enter a valid deposit amount.');
             return;
         }
-
+        setError(null);
         setLoading(true);
         setTimeout(() => {
             try {
@@ -120,38 +97,32 @@ const Wallet = () => {
                     status: 'completed',
                     details: 'Deposit to wallet',
                 };
-                setTransactionHistory(prevHistory => [newTransaction, ...prevHistory]);
+                addTransaction(newTransaction);
                 setDepositAmount('');
             } catch (error) {
                 console.error("Error during deposit:", error);
-                setError("Deposit failed. Please try again."); 
+                setError("Deposit failed. Please try again.");
             } finally {
-                setLoading(false); 
+                setLoading(false);
             }
-        }, 1000); 
+        }, 1000);
     };
 
     const handleWithdrawal = () => {
         if (!withdrawalAmount || parseFloat(withdrawalAmount) <= 0) {
-            alert('Please enter a valid withdrawal amount.');
+            setError('Please enter a valid withdrawal amount.');
             return;
         }
 
         const amount = parseFloat(withdrawalAmount);
         if (amount > balance) {
-            alert('Insufficient balance.');
+            setError('Insufficient balance.');
             return;
         }
-
+        setError(null);
         setLoading(true);
-       setTimeout(() => {
+        setTimeout(() => {
             try {
-                const amount = parseFloat(withdrawalAmount);
-                if (amount > balance) {
-                    alert('Insufficient balance.');
-                    setLoading(false); 
-                    return;
-                }
                 setBalance(prevBalance => prevBalance - amount);
                 const newTransaction = {
                     id: uuidv4(),
@@ -161,7 +132,7 @@ const Wallet = () => {
                     status: 'completed',
                     details: 'Withdrawal from wallet',
                 };
-                setTransactionHistory(prevHistory => [newTransaction, ...prevHistory]);
+                addTransaction(newTransaction);
                 setWithdrawalAmount('');
             } catch (error) {
                 console.error("Error during withdrawal:", error);
@@ -169,30 +140,24 @@ const Wallet = () => {
             } finally {
                 setLoading(false);
             }
-        }, 1000); 
+        }, 1000);
     };
 
     const handleTransfer = () => {
         if (!transferAmount || parseFloat(transferAmount) <= 0 || !transferAddress) {
-            alert('Please enter a valid amount and recipient address.');
+            setError('Please enter a valid amount and recipient address.');
             return;
         }
 
         const amount = parseFloat(transferAmount);
         if (amount > balance) {
-            alert('Insufficient balance.');
+            setError('Insufficient balance.');
             return;
         }
-
+        setError(null);
         setLoading(true);
         setTimeout(() => {
             try {
-                const amount = parseFloat(transferAmount);
-                if (amount > balance) {
-                    alert('Insufficient balance.');
-                    setLoading(false); 
-                    return;
-                }
                 setBalance(prevBalance => prevBalance - amount);
                 const newTransaction = {
                     id: uuidv4(),
@@ -202,7 +167,7 @@ const Wallet = () => {
                     status: 'completed',
                     details: `Transfer to ${transferAddress}`,
                 };
-                setTransactionHistory(prevHistory => [newTransaction, ...prevHistory]);
+                addTransaction(newTransaction);
                 setTransferAmount('');
                 setTransferAddress('');
             } catch (error) {
@@ -211,146 +176,71 @@ const Wallet = () => {
             } finally {
                 setLoading(false);
             }
-        }, 1500); 
+        }, 1500);
     };
 
-     const getStatusColor = (status) => {
+    const getStatusColor = (status) => {
         switch (status.toLowerCase()) {
             case 'completed':
-                return 'text-green-500';
+                return 'text-green-600 font-medium';
             case 'pending':
-                return 'text-yellow-500';
+                return 'text-yellow-600 font-medium';
             case 'failed':
-                return 'text-red-500';
+                return 'text-red-600 font-medium';
             default:
-                return 'text-gray-500';
+                return 'text-gray-500 font-medium';
         }
     };
 
     const getTransactionTypeColor = (type) => {
         switch (type.toLowerCase()) {
             case 'deposit':
-                return 'text-green-600';
+                return 'text-green-700';
             case 'withdrawal':
-                return 'text-red-600';
+                return 'text-red-700';
             case 'transfer':
-                return 'text-blue-600';
+                return 'text-blue-700';
             default:
                 return 'text-gray-700';
         }
     };
 
-    
     const handleDeleteTransaction = (id) => {
         setTransactionHistory(prevHistory => prevHistory.filter(transaction => transaction.id !== id));
     };
 
-    console.log("Transaction History before render:", transactionHistory);
-
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden">
-            {/* Static Sidebar */}
-            <aside className="w-64 bg-gray-800 text-white">
-                <div className="p-4">
-                    <div className="h-12 w-12 rounded-full overflow-hidden mb-4">
-                        <img src="bitcon.png" alt="logo" className="h-full w-full object-cover" />
-                    </div>
-                {/* Display actual user info from context */}
-                {user ? (
-                    <>
-                        <h1 className="text-xl font-semibold">{user.username || user.name}</h1>
-                        <p className="text-gray-400 text-sm">{user.email}</p>
-                    </>
-                ) : (
-                    <>
-                        <h1 className="text-xl font-semibold">Guest</h1>
-                        <p className="text-gray-400 text-sm">Not logged in</p>
-                    </>
-                )}
-            </div>
-                <nav className="mt-8">
-                    <ul className="space-y-2">
-                        <li>
-                            <Link
-                                to="/dashboard"
-                                className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md"
-                            >
-                                <Activity className="mr-2 h-4 w-4" />
-                                Dashboard
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/calculator"
-                                className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md"
-                            >
-                                <Calculator className="mr-2 h-4 w-4" />
-                                Calculator
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/wallet"
-                                className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md"
-                            >
-                                <WalletIcon className="mr-2 h-4 w-4" />
-                                My Wallet
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/history"
-                                className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md"
-                            >
-                                <TrendingUp className="mr-2 h-4 w-4" />
-                                History
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/profile"
-                                className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md"
-                            >
-                                <Users className="mr-2 h-4 w-4" />
-                                Profile
-                            </Link>
-                        </li>
-                        <li>
-                            <button
-                                onClick={handleLogout} 
-                                className="w-full flex items-center justify-start text-white hover:bg-gray-700 px-4 py-2 rounded-md cursor-pointer"
-                            >
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Logout
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-                <div className="absolute bottom-4 left-4">
-                    <div className="flex items-center gap-2">
-                        <Cloud className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm">{weather.temperature}°C {weather.condition}</span>
-                    </div>
-                </div>
-            </aside>
+        <div className="flex flex-col min-h-screen bg-gray-100">
+            {/* Navbar at the top */}
+            <Navbar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+
+            {/* Sidebar (will be hidden on md+ screens) */}
+            <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
             {/* Main Content Area */}
-            <div className="flex-1 p-2">
-                <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center mb-4">
-                    Wallet
+            <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min md:ml-0">
+                
+                <h1 className="col-span-full text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-center mb-6">
+                    My Wallet
                 </h1>
 
+                {error && (
+                    <div className="col-span-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        <strong className="font-bold">Error!</strong>
+                        <span className="block sm:inline ml-2">{error}</span>
+                        <span className="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onClick={() => setError(null)}>
+                            <X className="h-4 w-4 fill-current" />
+                        </span>
+                    </div>
+                )}
+
                 {/* Balance Card */}
-                <div className={cardStyle + " mb-4 p-2"}>
-                    <div className="flex justify-between items-center">
+                <div className={`${cardStyle} md:col-span-2 lg:col-span-1 flex flex-col justify-between`}>
+                    <div className="flex justify-between items-start mb-4">
                         <div>
-                            <div className="text-md font-semibold text-gray-900">Balance</div>
-                            <div className="text-xs text-gray-500">Total Balance</div>
+                            <h3 className="text-lg font-bold text-gray-800 mb-1">Current Balance</h3>
+                            <p className="text-sm text-gray-500">Your available funds</p>
                         </div>
-                        <p className="text-xl font-bold text-gray-900">
-                            {currencySymbols[selectedCurrency]}
-                            {convertToCurrency(balance, selectedCurrency)}
-                        </p>
                         <select
                             value={selectedCurrency}
                             onChange={(e) => setSelectedCurrency(e.target.value)}
@@ -361,166 +251,152 @@ const Wallet = () => {
                             <option value="EUR">EUR</option>
                         </select>
                     </div>
+                    <div className="text-4xl font-extrabold text-gray-900">
+                        {currencySymbols[selectedCurrency]}
+                        {convertToCurrency(balance, selectedCurrency)}
+                    </div>
                 </div>
 
-                {/* Deposit/Withdrawal/Transfer Section */}
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className={cardStyle + " flex-1"}>
-                        <div className="p-2">
-                            <div className="text-md font-semibold text-gray-900 mb-2">Deposit</div>
-                            <input
-                                type="number"
-                                placeholder="Amount"
-                                value={depositAmount}
-                                onChange={(e) => setDepositAmount(e.target.value)}
-                                className={inputStyle}
-                                disabled={loading}
-                            />
-                            <button
-                                onClick={handleDeposit}
-                                className={buttonStyle + " bg-green-500 hover:bg-green-600"}
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                                        Depositing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <ArrowDownLeft className="mr-1.5 h-4 w-4" />
-                                        Deposit
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                {/* Quick Actions (Deposit, Withdraw, Transfer) */}
+                <div className={`${cardStyle} md:col-span-2 lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4`}>
+                    <div className="col-span-1">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center"><ArrowDownLeft className="h-5 w-5 mr-2 text-green-500" />Deposit</h3>
+                        <input
+                            type="number"
+                            placeholder="Amount"
+                            value={depositAmount}
+                            onChange={(e) => setDepositAmount(e.target.value)}
+                            className={inputStyle}
+                            disabled={loading}
+                        />
+                        <button
+                            onClick={handleDeposit}
+                            className={buttonStyle + " bg-green-500 hover:bg-green-600"}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Depositing...
+                                </>
+                            ) : (
+                                'Deposit Funds'
+                            )}
+                        </button>
                     </div>
 
-                    <div className={cardStyle + " flex-1"}>
-                        <div className="p-2">
-                            <div className="text-md font-semibold text-gray-900 mb-2">Withdraw</div>
-                            <input
-                                type="number"
-                                placeholder="Amount"
-                                value={withdrawalAmount}
-                                onChange={(e) => setWithdrawalAmount(e.target.value)}
-                                className={inputStyle}
-                                disabled={loading}
-                            />
-                            <button
-                                onClick={handleWithdrawal}
-                                className={buttonStyle + " bg-red-500 hover:bg-red-600"}
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                                        Withdrawing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <ArrowUpRight className="mr-1.5 h-4 w-4" />
-                                        Withdraw
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                    <div className="col-span-1">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center"><ArrowUpRight className="h-5 w-5 mr-2 text-red-500" />Withdraw</h3>
+                        <input
+                            type="number"
+                            placeholder="Amount"
+                            value={withdrawalAmount}
+                            onChange={(e) => setWithdrawalAmount(e.target.value)}
+                            className={inputStyle}
+                            disabled={loading}
+                        />
+                        <button
+                            onClick={handleWithdrawal}
+                            className={buttonStyle + " bg-red-500 hover:bg-red-600"}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Withdrawing...
+                                </>
+                            ) : (
+                                'Withdraw Funds'
+                            )}
+                        </button>
                     </div>
 
-                    <div className={cardStyle + " flex-1"}>
-                        <div className="p-2">
-                            <div className="text-md font-semibold text-gray-900 mb-2">Transfer</div>
-                            <input
-                                type="number"
-                                placeholder="Amount"
-                                value={transferAmount}
-                                onChange={(e) => setTransferAmount(e.target.value)}
-                                className={inputStyle}
-                                disabled={loading}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Recipient"
-                                value={transferAddress}
-                                onChange={(e) => setTransferAddress(e.target.value)}
-                                className={inputStyle}
-                                disabled={loading}
-                            />
-                            <button
-                                onClick={handleTransfer}
-                                className={buttonStyle + " bg-blue-500 hover:bg-blue-600"}
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                                        Transferring...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Send className="mr-1.5 h-4 w-4" />
-                                        Transfer
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                    <div className="col-span-1">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center"><Send className="h-5 w-5 mr-2 text-blue-500" />Transfer</h3>
+                        <input
+                            type="number"
+                            placeholder="Amount"
+                            value={transferAmount}
+                            onChange={(e) => setTransferAmount(e.target.value)}
+                            className={inputStyle}
+                            disabled={loading}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Recipient Address"
+                            value={transferAddress}
+                            onChange={(e) => setTransferAddress(e.target.value)}
+                            className={inputStyle}
+                            disabled={loading}
+                        />
+                        <button
+                            onClick={handleTransfer}
+                            className={buttonStyle + " bg-blue-500 hover:bg-blue-600"}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Transferring...
+                                </>
+                            ) : (
+                                'Transfer Funds'
+                            )}
+                        </button>
                     </div>
                 </div>
 
                 {/* Transaction History */}
-                <div className={cardStyle + " mt-4 p-2"}>
-                    <div className="text-lg font-semibold text-gray-900 mb-2">History</div>
-                    <div className="overflow-y-auto max-h-[200px]">
-                        <table className="min-w-full">
-                            <thead>
+                <div className={`${cardStyle} col-span-full`}>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center"><ListChecks className="h-5 w-5 mr-2 text-gray-600" />Transaction History</h3>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="text-left text-xs text-gray-500 px-1 py-0.5">Type</th>
-                                    <th className="text-left text-xs text-gray-500 px-1 py-0.5">Amount</th>
-                                    <th className="text-left text-xs text-gray-500 px-1 py-0.5">Date</th>
-                                    <th className="text-left text-xs text-gray-500 px-1 py-0.5">Status</th>
-                                    <th className="text-left text-xs text-gray-500 px-1 py-0.5">Details</th>
-                                    <th className="text-left text-xs text-gray-500 px-1 py-0.5">Delete</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-  {transactionHistory.length > 0 ? (
-    transactionHistory.map((transaction) => {
-      console.log("Rendering Transaction:", transaction);
-      return (
-        <tr key={transaction.id} className="text-xs">
-          <td className={getTransactionTypeColor(transaction.type) + " px-1 py-0.5"}>
-            {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
-          </td>
-          <td className="font-medium px-1 py-0.5">
-            {currencySymbols[selectedCurrency]}
-            {convertToCurrency(transaction.amount, selectedCurrency)}
-          </td>
-          <td className="text-gray-500 px-1 py-0.5">
-            {new Date(transaction.timestamp).toLocaleString()}
-          </td>
-          <td className={getStatusColor(transaction.status) + " px-1 py-0.5"}>
-            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-          </td>
-          <td className="text-gray-700 px-1 py-0.5">
-            {transaction.details}
-          </td>
-          <td className="px-1 py-0.5">
-            <button
-              onClick={() => handleDeleteTransaction(transaction.id)}
-              className="text-xxs font-bold px-1 py-0.5 rounded bg-red-500 hover:bg-red-700 text-white"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td colSpan={6} className="text-center text-gray-400 py-1 text-xs">No transactions.</td>
-    </tr>
-  )}
-</tbody>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {transactionHistory.length > 0 ? (
+                                    transactionHistory.map((transaction) => (
+                                        <tr key={transaction.id} className="hover:bg-gray-50">
+                                            <td className={`${getTransactionTypeColor(transaction.type)} px-4 py-2 whitespace-nowrap text-sm`}>
+                                                {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                                            </td>
+                                            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {currencySymbols[selectedCurrency]}
+                                                {convertToCurrency(transaction.amount, selectedCurrency)}
+                                            </td>
+                                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(transaction.timestamp).toLocaleString()}
+                                            </td>
+                                            <td className={`${getStatusColor(transaction.status)} px-4 py-2 whitespace-nowrap text-sm`}>
+                                                {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-700">
+                                                {transaction.details}
+                                            </td>
+                                            <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    onClick={() => handleDeleteTransaction(transaction.id)}
+                                                    className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={6} className="px-4 py-4 text-center text-gray-400 text-sm">No transactions yet.</td>
+                                    </tr>
+                                )}
+                            </tbody>
                         </table>
                     </div>
                 </div>

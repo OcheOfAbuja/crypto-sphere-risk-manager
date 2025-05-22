@@ -8,7 +8,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': { // Any request starting with /api will be proxied
-        target: 'http://localhost:5001', // Your backend URL
+        target: 'https://crypto-sphere-risk-manager-backend.onrender.com',
         changeOrigin: true, // Needed for virtual hosting sites
         secure: false, // For development, if your backend isn't using HTTPS yet
       }

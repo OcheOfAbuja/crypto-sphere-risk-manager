@@ -1,138 +1,127 @@
-import React, { useState } from 'react';
+import React from 'react';
+import {
+    ArrowUpRight, ArrowDownLeft, Send, Activity, Calculator, Wallet as WalletIcon,
+    TrendingUp, Users, LogOut, Cloud, X, Menu 
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
-import { useGoogleLogin } from '@react-oauth/google';
-import { FaGoogle } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
-function SignUpPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { signup, googleSignup } = useAuth(); // Get signup from the context
-  const navigate = useNavigate();
+const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'username') {
-      setUsername(value);
-    } else if (name === 'email') {
-      setEmail(value);
-    } else if (name === 'password') {
-      setPassword(value);
-    }
-  };
+    const handleLogout = async () => {
+        await logout();
+        navigate('/');
+        setIsSidebarOpen(false);
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    try {
-      await signup(username, email, password); // Call the signup function
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message || 'Sign up failed');
-      console.error('Sign up error:', err);
-    }
-  };
+    // Conditional classes for sidebar animation
+    const sidebarClasses = `
+        fixed top-0 left-0 h-full bg-gray-800 text-white w-64 p-5 z-50
+        transform transition-transform duration-300 ease-in-out
+        md:relative md:translate-x-0 md:shadow-none md:flex-shrink-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:hidden flex flex-col // Hide on medium and up, except when explicitly opened
+    `;
 
-  const googleSignUp = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const googleToken = tokenResponse.access_token;
-        const res = await axios.post('/api/google-signup', { token: googleToken });
-        const { token, user } = res.data;
-        googleSignup(token, user);
-        navigate('/dashboard');
-      } catch (error) {
-        console.error('Google sign-up failed:', error.response?.data?.message || error.message);
-        setError(error.response?.data?.message || 'Google sign-up failed');
-      }
-    },
-    onError: (errorResponse) => {
-      console.error('Google sign-up error:', errorResponse);
-      setError('Google sign-up failed.');
-    },
-  });
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-semibold mb-6 text-center text-gray-700">
-          Create an Account
-        </h2>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="username" className="block text-gray-600 text-sm font-medium mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-gray-600 text-sm font-medium mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-gray-600 text-sm font-medium mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-          <div>
+    // Only for mobile view: user info and logout button that were previously only in the header
+    const mobileUserSection = (
+        <div className="md:hidden flex flex-col items-center p-4 border-b border-gray-700 mb-4">
+            {user && (
+                <>
+                    <p className="font-semibold text-lg">{user.username || user.name}</p>
+                    <p className="text-gray-400 text-sm mb-4">{user.email}</p>
+                </>
+            )}
             <button
-              type="submit"
-              className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 focus:outline-none focus:bg-green-600"
+                onClick={handleLogout}
+                className="flex items-center justify-center w-full text-red-400 hover:text-red-300 transition-colors duration-200 py-2 rounded-md border border-red-400 hover:border-red-300"
             >
-              Sign Up
+                <LogOut className="h-5 w-5 mr-2" /> Logout
             </button>
-          </div>
-        </form>
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => googleSignUp()}
-            className="flex items-center justify-center w-full border border-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
-          >
-            <FaGoogle className="mr-2" />
-            Sign-up with Google
-          </button>
         </div>
-        <p className="mt-4 text-sm text-gray-600 text-center">
-          Already have an account?{' '}
-          <Link to="/login" className="text-blue-500 hover:underline">
-            Log In
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
-}
+    );
 
-export default SignUpPage;
+    return (
+        <>
+            {/* Sidebar */}
+            <aside className={sidebarClasses}>
+                {/* Close button for mobile sidebar */}
+                <div className="flex justify-between items-center mb-6 md:hidden">
+                    <div className="h-8 w-8 rounded-full overflow-hidden mr-2">
+                        <img src="bitcon.png" alt="logo" className="h-full w-full object-cover" />
+                    </div>
+                    <span className="text-xl font-semibold">Crypto Sphere</span>
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="text-white p-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+
+                {mobileUserSection}
+
+                <nav className="flex-1 space-y-2">
+                    <Link
+                        to="/dashboard"
+                        className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <Activity className="h-5 w-5 mr-3" /> Dashboard
+                    </Link>
+                    <Link
+                        to="/wallet"
+                        className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <WalletIcon className="h-5 w-5 mr-3" /> My Wallet
+                    </Link>
+                    <Link
+                        to="/calculator"
+                        className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <Calculator className="h-5 w-5 mr-3" /> Calculator
+                    </Link>
+                    <Link
+                        to="/history"
+                        className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <TrendingUp className="h-5 w-5 mr-3" /> Transaction History
+                    </Link>
+                    <Link
+                        to="/profile"
+                        className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <Users className="h-5 w-5 mr-3" /> Profile
+                    </Link>
+                </nav>
+
+                {/* Logout button (optional, but good to have in sidebar for consistency) */}
+                {/* If you already have it in Navbar for large screens, you can remove it here */}
+                {/* <div className="mt-auto pt-4 border-t border-gray-700">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-red-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                    >
+                        <LogOut className="h-5 w-5 mr-3" /> Logout
+                    </button>
+                </div> */}
+            </aside>
+
+            {/* Overlay for small screens when sidebar is open */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
+            )}
+        </>
+    );
+};
+
+export default Sidebar;
