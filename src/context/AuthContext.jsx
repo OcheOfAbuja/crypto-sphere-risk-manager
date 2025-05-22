@@ -3,6 +3,11 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
+const API = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
+});
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -35,9 +40,11 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       localStorage.setItem('token', token);
       console.log('AuthContext - Second useEffect - Token saved to localStorage:', token?.substring(0, 10) + '...');
+      API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       localStorage.removeItem('token');
       console.log('AuthContext - Second useEffect - Token removed from localStorage');
+      delete API.defaults.headers.common['Authorization'];
     }
 
     if (user) {
@@ -53,7 +60,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       console.log('AuthContext: Attempting login for identifier:', identifier);
-      const response = await axios.post('/api/login', { identifier, password }); 
+      const response = await API.post('/api/login', { identifier, password }); 
       const { token: loginToken, user: loginUser } = response.data;
       
       setToken(loginToken);
@@ -82,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       // If your backend /logout requires a token, send it. If not, simplify this call.
       // Ensure the token exists before sending it for logout
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.post('api/logout', {}, { headers });
+      const response = await API.post('api/logout', {}, { headers });
       console.log('AuthContext: Backend logout successful:', response.data.message);
     } catch (error) {
       console.error('AuthContext: Error during backend logout:', error.response?.data?.message || error.message);
@@ -98,7 +105,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true); 
     try {
       console.log('AuthContext: Attempting signup for username:', username, 'email:', email);
-      const response = await axios.post('api/signup', { username, email, password });
+      const response = await API.post('api/signup', { username, email, password });
       const { token: signupToken, user: signupUser } = response.data;
       
       setToken(signupToken);
@@ -118,7 +125,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true); 
     try {
       console.log('AuthContext: Attempting Google signup/login with token...');
-      const response = await axios.post('/api/google-signup', { token: googleToken });
+      const response = await API.post('/api/google-signup', { token: googleToken });
       const { token: googleTokenResponse, user: googleUser } = response.data;
       
       setToken(googleTokenResponse);
