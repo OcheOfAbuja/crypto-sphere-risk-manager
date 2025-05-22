@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       // If your backend /logout requires a token, send it. If not, simplify this call.
       // Ensure the token exists before sending it for logout
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await API.post('api/logout', {}, { headers });
+      const response = await API.post('/api/logout', {}, { headers });
       console.log('AuthContext: Backend logout successful:', response.data.message);
     } catch (error) {
       console.error('AuthContext: Error during backend logout:', error.response?.data?.message || error.message);
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true); 
     try {
       console.log('AuthContext: Attempting signup for username:', username, 'email:', email);
-      const response = await API.post('api/signup', { username, email, password });
+      const response = await API.post('/api/signup', { username, email, password });
       const { token: signupToken, user: signupUser } = response.data;
       
       setToken(signupToken);
