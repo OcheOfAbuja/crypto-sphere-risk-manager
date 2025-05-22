@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axiosInstance from '../axiosConfig';
+import axios from 'axios';
 
 function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -8,14 +8,14 @@ function ResetPasswordPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [tokenValid, setTokenValid] = useState(false);
-  const { token } = useParams();
+  const { token } = useParams(); // Get the token from the URL
   const navigate = useNavigate();
 
   useEffect(() => {
     // Verify the token on component mount
     const verifyToken = async () => {
       try {
-        const response = await axiosInstance.post('/api/verify-reset-token', { token });
+        const response = await axios.post('/api/verify-reset-token', { token });
         if (response.data.valid) {
           setTokenValid(true);
         } else {
@@ -52,7 +52,7 @@ function ResetPasswordPage() {
     }
 
     try {
-      const response = await axiosInstance.post('/api/reset-password', { token, password });
+      const response = await axios.post('/api/reset-password', { token, password });
       setMessage(response.data.message || 'Password reset successfully!');
       // Optionally, redirect the user to the login page after a short delay
       setTimeout(() => {

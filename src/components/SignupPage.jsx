@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axiosInstance from '../axiosConfig';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
 import { FaGoogle } from 'react-icons/fa';
@@ -47,7 +47,7 @@ function SignUpPage() {
     onSuccess: async (tokenResponse) => {
       try {
         const googleToken = tokenResponse.access_token;
-        const res = await axiosInstance.post('/api/google-login', { token: googleToken });
+        const res = await axios.post('/api/google-login', { token: googleToken }); // Backend Google signup route
         const { token, user } = res.data;
         googleSignup(token, user); // Call your AuthContext googleSignup function
         navigate('/dashboard');

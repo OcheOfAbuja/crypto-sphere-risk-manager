@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../axiosConfig';
+import axios from 'axios';
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -16,7 +16,7 @@ function ForgotPasswordPage() {
     setMessage('');
     setError('');
     try {
-      const response = await axiosInstance.post('/api/forgot-password', { email });
+      const response = await axios.post('/api/forgot-password', { email });
       setMessage(response.data.message || 'Password reset link sent to your email.');
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to send reset email. Please try again.');
