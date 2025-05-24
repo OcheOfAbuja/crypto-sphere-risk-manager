@@ -17,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <NavigationProvider>
             <AuthProvider>
               <App />
+              
             </AuthProvider>
           </NavigationProvider>
       </CoinContextProvider>
