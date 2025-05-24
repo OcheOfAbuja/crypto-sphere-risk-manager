@@ -220,7 +220,7 @@ const Wallet = () => {
             {/* Main Content Area */}
             <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min md:ml-0">
                 
-                <h1 className="col-span-full text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-center mb-6">
+                <h1 className="col-span-full text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center mb-6">
                     My Wallet
                 </h1>
 

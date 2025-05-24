@@ -10,14 +10,21 @@ import Sidebar from '../components/Sidebar';
 const History = () => {
     const [calculatorHistory, setCalculatorHistory] = useState([]);
     const [walletHistory, setWalletHistory] = useState([]);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar visibility
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
     const { isAuthenticated, user } = useAuth();
     const navigate = useNavigate();
 
     const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
+        setIsSidebarOpen(prev => !prev);
+    };
+
+    const handleLogout = async () => {
+        console.log('Logout button clicked from Histoy!');
+        await LogOut();
+        navigate('/');
+        console.log('History Naviagated to / after logout.');
     };
 
     useEffect(() => {
@@ -59,6 +66,10 @@ const History = () => {
 
     const convertToCurrency = (amount, currency) => {
         const exchangeRates = { USD: 1, NGN: 750, EUR: 0.95 };
+        if (typeof amount !== 'number'){
+            console.warn(`Attempted to convert non-number amount: ${amount}`);
+            return 'N/A';
+        }
         return (amount * exchangeRates[currency]).toFixed(2);
     }
 
@@ -84,18 +95,31 @@ const History = () => {
     };
 
     const cardStyle = "bg-white border border-gray-200 shadow-md rounded-md";
-    const allHistory = [...calculatorHistory, ...walletHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const allHistory = [...calculatorHistory.map(item => ({
+        ...item,
+        type: 'calculation',
+        result: Number(item.orderValue || item.result),
+        details: `Risk $${item.riskAmount}, Entry: $${item.entryPrice}, SL: $${item.stopLossPrice}`,
+        status: 'completed'
+    })), ...walletHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">
             {/* Sidebar component */}
-             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+            <Sidebar  
+             toggleSidebar={toggleSidebar}
+             isSidebarOpen={isSidebarOpen}  
+             setIsSidebarOpen={setIsSidebarOpen}
+             user={user}
+             handleLogout={handleLogout} 
+            />
 
             {/* Main content area, pushed by sidebar when open */}
             <div className={`flex-1 flex flex-col transition-all duration-300
                 ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
                 {/* Navbar component */}
                <Navbar
+                    toggleSidebar={toggleSidebar}
                     isSidebarOpen={isSidebarOpen}
                     setIsSidebarOpen={setIsSidebarOpen}
                     selectedCurrency={selectedCurrency}
@@ -104,7 +128,7 @@ const History = () => {
                 
 
                 <div className="p-4 flex-grow overflow-y-auto mt-16">
-                    <h1 className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-center mb-6">
+                    <h1 className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center mb-6">
                         History
                     </h1>
                     <div className={cardStyle + " p-6"}>

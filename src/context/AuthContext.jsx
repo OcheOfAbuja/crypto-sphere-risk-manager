@@ -13,7 +13,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   // Effect to load token and user from localStorage on initial mount
   useEffect(() => {
     console.log('AuthContext - First useEffect (on mount)');
@@ -67,10 +66,9 @@ export const AuthProvider = ({ children }) => {
       setUser(loginUser);
       setLoading(false);
       console.log('AuthContext: Login successful, token and user set.');
-      // Removed navigate('/dashboard') from here. LoginPage.js will handle it.
-      return response; // Return response for component to handle navigation/success
+      return response; 
     } catch (error) {
-      console.error('AuthContext: Login failed:', error.response?.data?.error || error.message); // Use error.response.data.error for consistency
+      console.error('AuthContext: Login failed:', error.response?.data?.error || error.message); 
       setToken(null);
       setUser(null);
       setLoading(false);
@@ -86,17 +84,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
 
     try {
-      // If your backend /logout requires a token, send it. If not, simplify this call.
-      // Ensure the token exists before sending it for logout
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await API.post('/api/logout', {}, { headers });
       console.log('AuthContext: Backend logout successful:', response.data.message);
     } catch (error) {
       console.error('AuthContext: Error during backend logout:', error.response?.data?.message || error.message);
-      // Even if backend logout fails, we still want to clear frontend state
     } finally {
-      // Navigate to login page after logout, regardless of backend call success
-      //navigate('/'); // Assuming '/' is your root, and it redirects to /login if unauthenticated.
       console.log('AuthContext: Navigated to /login after logout.');
     }
   };
@@ -112,7 +105,6 @@ export const AuthProvider = ({ children }) => {
       setUser(signupUser);
       setLoading(false);
       console.log('AuthContext: Signup successful, token and user set.');
-      //navigate('/dashboard'); // Navigate after successful signup
       return response;
     } catch (error) {
       console.error('AuthContext: Signup failed:', error.response?.data?.error || error.message);
@@ -121,18 +113,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const googleSignup = async (googleToken) => {
+  const googleSignup = async (googleAccessToken) => { // This function is correct as is
     setLoading(true); 
     try {
       console.log('AuthContext: Attempting Google signup/login with token...');
-      const response = await API.post('/api/google-signup', { token: googleToken });
+      const response = await API.post('/api/google-login', { token: googleAccessToken });
       const { token: googleTokenResponse, user: googleUser } = response.data;
       
       setToken(googleTokenResponse);
       setUser(googleUser);
       setLoading(false);
       console.log('AuthContext: Google signup/login successful, token and user set.');
-      //navigate('/dashboard'); 
       return response;
     } catch (error) {
       console.error('AuthContext: Google signup/login failed:', error.response?.data?.error || error.message);

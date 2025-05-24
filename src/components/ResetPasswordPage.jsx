@@ -2,34 +2,50 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
+const BACKEND_URL = process.env.NODE_ENV === 'production'
+  ? process.env.REACT_APP_BACKEND_URL
+  : 'http://localhost:5001';
+
 function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [tokenValid, setTokenValid] = useState(false);
-  const { token } = useParams(); // Get the token from the URL
+  const [loading, setLoading] = useState(true);
+  const { token } = useParams(); 
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     // Verify the token on component mount
     const verifyToken = async () => {
+      setLoading(true);
+      setError('');
+      if (!token){
+        setError('No reset link provided.');
+        setLoading(false);
+        return;
+      }
       try {
-        const response = await axios.post('/api/verify-reset-token', { token });
+        const response = await axios.post(`${BACKEND_URL}/api/verify-reset-token`, { token });
         if (response.data.valid) {
           setTokenValid(true);
         } else {
           setError('Invalid or expired reset link.');
         }
-      } catch (error) {
-        setError('Failed to verify reset link. Please try again.');
+      } catch (err) {
+        console.error("Token verificatio failed:", err);
+        setError(err.response?.data?.error || 'Failed to verify reset link. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
-
     if (token) {
       verifyToken();
     } else {
       setError('No reset link provided.');
+      setLoading(false);
     }
   }, [token]);
 
@@ -50,20 +66,33 @@ function ResetPasswordPage() {
       setError('Passwords do not match.');
       return;
     }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
 
     try {
-      const response = await axios.post('/api/reset-password', { token, password });
+      const response = await axios.post(`${BACKEND_URL}/api/reset-password`, { token, password });
       setMessage(response.data.message || 'Password reset successfully!');
       // Optionally, redirect the user to the login page after a short delay
       setTimeout(() => {
-        navigate('/');
+      navigate('/');
       }, 2000);
-    } catch (error) {
+    } catch (err) {
+      console.error("Password reset failed:", err);
       setError(error.response?.data?.message || 'Failed to reset password. Please try again.');
     }
   };
 
-  if (!tokenValid) {
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen bg-gray-100'>
+        <div className='text-grey-700 text-lg'>Loading</div>
+      </div>
+    );
+  }
+
+  if (error && !tokenValid) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="bg-white p-8 rounded shadow-md w-full max-w-md">

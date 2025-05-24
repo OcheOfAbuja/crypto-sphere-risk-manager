@@ -1,16 +1,16 @@
-// components/LoginPage.jsx
 import React, { useState, useEffect } from 'react';
 import { FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate, Link } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
+// import axios from 'axios'; // No longer directly used for Google login here
 
 function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const { login, googleSignup } = useAuth();
+  const { login, googleSignup } = useAuth(); // Destructure googleSignup
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,46 +34,51 @@ function LoginPage() {
     setRememberMe(e.target.checked);
   };
 
-  // components/LoginPage.jsx
-// ...
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoginError('');
-  try {
-    console.log('LoginPage: Attempting login with:', { identifier: emailOrUsername });
-    // CALL THE AUTH CONTEXT LOGIN FUNCTION DIRECTLY WITH USER INPUTS
-    const response = await login(emailOrUsername, password); // <--- CORRECTED LINE
-    console.log('LoginPage: AuthContext login function completed. Response data:', response.data);
-    // Now, perform the navigation AFTER the state update in AuthContext
-    console.log('LoginPage: Calling navigate to /dashboard...');
-    navigate('/dashboard'); 
-    console.log('LoginPage: navigate("/dashboard") has been called.');
-
-  if (rememberMe) {
-    localStorage.setItem('rememberedEmailOrUsername', emailOrUsername);
-  } else {
-    localStorage.removeItem('rememberedEmailOrUsername');
-  }
-  } catch (error) {
-    console.error('LoginPage: Login failed:', error.response?.data?.error || error.message);
-    setLoginError(error.response?.data?.error || 'Login failed. Please try again.');
-  }
-};
-
-// components/LoginPage.jsx
-const googleLogin = useGoogleLogin({
-  onSuccess: async (tokenResponse) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoginError('');
     try {
-      const googleToken = tokenResponse.access_token;
-      // Use the googleSignup function from AuthContext
-      await googleSignup(googleToken);
-      navigate('/dashboard');
+      console.log('LoginPage: Attempting login with:', { identifier: emailOrUsername });
+      const response = await login(emailOrUsername, password);
+      console.log('LoginPage: AuthContext login function completed. Response data:', response.data);
+      console.log('LoginPage: Calling navigate to /dashboard...');
+      navigate('/dashboard'); 
+      console.log('LoginPage: navigate("/dashboard") has been called.');
+
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmailOrUsername', emailOrUsername);
+      } else {
+        localStorage.removeItem('rememberedEmailOrUsername');
+      }
     } catch (error) {
-      console.error('Google login failed:', error.response?.data?.message || error.message);
-      setLoginError(error.response?.data?.message || 'Google login failed. Please try again.');
+      console.error('LoginPage: Login failed:', error.response?.data?.error || error.message);
+      setLoginError(error.response?.data?.error || 'Login failed. Please try again.');
     }
-  },
-});
+  };
+
+  const googleLogin = useGoogleLogin({
+    scope: 'openid email profile',
+    onSuccess: async (tokenResponse) => {
+      try {
+        console.log('Google onSuccess tokenResponse:', tokenResponse);
+        const googleAccesToken = tokenResponse.access_token; // Correctly get the ID token
+        if (!googleAccesToken) {
+          throw new Error('Google Access token not found in response.');
+        }
+        console.log('Calling AuthContext googleSignup with token:', googleAccessToken);
+        // Call the googleSignup function from AuthContext, which handles the backend call and state update
+        await googleSignup(googleAccessToken); // Pass only the ID token
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Google login failed:', error.response?.data?.message || error.message);
+        setLoginError(error.response?.data?.message || 'Google login failed. Please try again.');
+      }
+    },
+    onError: (errorResponse) => {
+      console.error('Google login error:', errorResponse);
+      setLoginError('Google login failed.'); // Using setLoginError for consistency
+    },
+  });
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -147,7 +152,7 @@ const googleLogin = useGoogleLogin({
         <div className="mt-4">
           <button
             type="button"
-            onClick={googleLogin}
+            onClick={googleLogin} // Call the googleLogin function
             className="flex items-center justify-center w-full border border-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
           >
             <FaGoogle className="mr-2" />

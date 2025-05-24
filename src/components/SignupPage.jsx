@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+// import axios from 'axios'; // No longer directly used for Google signup here
 import { useAuth } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
 import { FaGoogle } from 'react-icons/fa';
@@ -10,7 +10,7 @@ function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { signup, googleSignup } = useAuth(); // Assuming you have googleSignup in AuthContext
+  const { signup, googleSignup } = useAuth(); // Destructure googleSignup
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -28,31 +28,36 @@ function SignUpPage() {
     e.preventDefault();
     setError(''); 
     console.log('SignUpPage - handleSubmit called'); 
-    console.log('SignUpPage - Form data:', { username, email, password }); // ADDED
+    console.log('SignUpPage - Form data:', { username, email, password }); 
     try {
-      await signup(username, email, password); // Include username in the signup call
+      await signup(username, email, password);
       console.log('SignUpPage - Signup function completed successfully'); 
-      navigate('/dashboard'); // Redirect on successful signup
+      navigate('/dashboard'); 
     } catch (err) {
       console.error('Signup error:', err);
       if (err.response && err.response.status === 409) {
-        setError(err.response.data.error); // Extract the specific error message from the backend
+        setError(err.response.data.error); 
       } else {
-        setError('Signup failed. Please try again.'); // Generic error for other issues
+        setError('Signup failed. Please try again.'); 
       }
     }
   };
 
   const googleSignUp = useGoogleLogin({
+    scope: 'openid email profile',
     onSuccess: async (tokenResponse) => {
       try {
-        const googleToken = tokenResponse.access_token;
-        const res = await axios.post('/api/google-login', { token: googleToken }); // Backend Google signup route
-        const { token, user } = res.data;
-        googleSignup(token, user); // Call your AuthContext googleSignup function
+        console.log('Google onSuccess tokenResponse:', tokenResponse);
+        const googleAccessToken = tokenResponse.access_token; // Correct variable name for consistency
+        if (!googleAccessToken) {
+          throw new Error('Google Access Token not found in response.');
+        }
+        console.log('Calling AuthContext googleSignup with token:', googleAccessToken);
+        // Call the googleSignup function from AuthContext, which handles the backend call and state update
+        await googleSignup(googleAccessToken); // Pass only the ID token
         navigate('/dashboard');
-      } catch (error) {
-        console.error('Google sign-up failed:', error.response?.data?.message || error.message);
+      } catch (err) {
+        console.error('Google sign-up failed:', err.response?.data?.message || error.message);
         setError(error.response?.data?.message || 'Google sign-up failed');
       }
     },
@@ -124,7 +129,7 @@ function SignUpPage() {
         <div className="mt-4">
           <button
             type="button"
-            onClick={() => googleSignUp()}
+            onClick={() => googleSignUp()} // Call the googleSignUp function
             className="flex items-center justify-center w-full border border-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
           >
             <FaGoogle className="mr-2" />
