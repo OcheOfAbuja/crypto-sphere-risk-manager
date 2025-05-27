@@ -50,7 +50,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 {/* Close button for mobile sidebar */}
                 <div className="flex justify-between items-center mb-6 md:hidden">
                     <div className="h-8 w-8 rounded-full overflow-hidden mr-2">
-                        <img src="bitcon.png" alt="logo" className="h-full w-full object-cover" />
+                        <img src="/bitcon.png" alt="logo" className="h-full w-full object-cover" />
                     </div>
                     <span className="text-xl font-semibold">Crypto Sphere</span>
                     <button

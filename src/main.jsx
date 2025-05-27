@@ -12,12 +12,12 @@ import { BrowserRouter } from 'react-router-dom';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-    <GoogleOAuthProvider clientId="481025084065-272jm543jslcjd3ic6bnqb6gl1vmkt56.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId="647555831129-lciav0j4hotvj6omdu1p3ra197mkq520.apps.googleusercontent.com">
       <CoinContextProvider>
         <NavigationProvider>
             <AuthProvider>
               <App />
-              
+
             </AuthProvider>
           </NavigationProvider>
       </CoinContextProvider>

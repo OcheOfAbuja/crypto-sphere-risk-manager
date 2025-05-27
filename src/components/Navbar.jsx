@@ -18,7 +18,7 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             {/* Logo */}
             <div className="flex items-center">
                 <div className="h-8 w-8 rounded-full overflow-hidden mr-2">
-                    <img src="bitcon.png" alt="logo" className="h-full w-full object-cover" />
+                    <img src="/bitcon.png" alt="logo" className="h-full w-full object-cover" />
                 </div>
                 <span className="text-xl font-semibold">Crypto Sphere</span>
             </div>

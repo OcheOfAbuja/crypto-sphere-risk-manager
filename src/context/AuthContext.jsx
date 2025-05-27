@@ -113,11 +113,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const googleSignup = async (googleAccessToken) => { // This function is correct as is
+  const googleSignup = async (googleTokenFromFrontend) => { // This function is correct as is
     setLoading(true); 
     try {
       console.log('AuthContext: Attempting Google signup/login with token...');
-      const response = await API.post('/api/google-login', { token: googleAccessToken });
+      if (!googleTokenFromFrontend) {
+        throw new Error('Google token was not provided to googleSignup function.');
+      }
+
+      const response = await API.post('/api/google-login', { token: googleTokenFromFrontend });
       const { token: googleTokenResponse, user: googleUser } = response.data;
       
       setToken(googleTokenResponse);

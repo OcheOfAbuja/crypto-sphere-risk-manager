@@ -61,24 +61,31 @@ function LoginPage() {
     onSuccess: async (tokenResponse) => {
       try {
         console.log('Google onSuccess tokenResponse:', tokenResponse);
-        const googleAccesToken = tokenResponse.access_token; // Correctly get the ID token
-        if (!googleAccesToken) {
-          throw new Error('Google Access token not found in response.');
+        const tokenToSendToBackend = tokenResponse.id_token || tokenResponse.access_token; // Correctly get the ID token
+        if (!tokenToSendToBackend) {
+          throw new Error('Neither ID token or Access token not found in Google response.');
         }
-        console.log('Calling AuthContext googleSignup with token:', googleAccessToken);
+        console.log('Calling AuthContext googleSignup with token (substring):', tokenToSendToBackend.substring(0, 30) + '...');
         // Call the googleSignup function from AuthContext, which handles the backend call and state update
-        await googleSignup(googleAccessToken); // Pass only the ID token
+        await googleSignup(tokenToSendToBackend); // Pass only the ID token
         navigate('/dashboard');
-      } catch (error) {
-        console.error('Google login failed:', error.response?.data?.message || error.message);
-        setLoginError(error.response?.data?.message || 'Google login failed. Please try again.');
+      } catch (err) { // <-- Error object is named 'err'
+        console.error('Google login failed:', err.response?.data?.message || err.message); // <-- Corrected: using 'err'
+        // Corrected line below: using 'err.response'
+        // For LoginPage:
+        setLoginError(err.response?.data?.message || 'Google login failed. Please try again.');
+        // For SignupPage (if you copy this block there):
+        // setError(err.response?.data?.message || 'Google sign-up failed. Please try again');
       }
     },
     onError: (errorResponse) => {
       console.error('Google login error:', errorResponse);
-      setLoginError('Google login failed.'); // Using setLoginError for consistency
+      // For LoginPage:
+      setLoginError('Google login failed.');
+      // For SignupPage:
+      // setError('Google sign-up failed.');
     },
-  });
+});
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

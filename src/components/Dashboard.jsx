@@ -267,7 +267,7 @@ const Dashboard = () => {
                 {/* Displaying the first 9 coins at the bottom - Now filtered and responsive grid */}
                 <div className='mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
                     {exchangeRateLoading && <p>Loading exchange rates...</p>}
-                    {filteredCoins.slice(0, 9).map((item, index) => (
+                    {filteredCoins.slice(0, 12).map((item, index) => (
                         <div className='bg-white rounded-md shadow-md p-4' key={item.id || index}>
                             <p className="text-sm text-gray-500">Rank: {item.market_cap_rank}</p>
                             <div className="flex items-center space-x-2 mb-2">

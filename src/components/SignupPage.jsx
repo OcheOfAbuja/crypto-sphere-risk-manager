@@ -48,17 +48,17 @@ function SignUpPage() {
     onSuccess: async (tokenResponse) => {
       try {
         console.log('Google onSuccess tokenResponse:', tokenResponse);
-        const googleAccessToken = tokenResponse.access_token; // Correct variable name for consistency
-        if (!googleAccessToken) {
-          throw new Error('Google Access Token not found in response.');
+        const tokenToSendToBackend = tokenResponse.id_token || tokenResponse.access_token; // Correct variable name for consistency
+        if (!tokenToSendToBackend) {
+          throw new Error('Neither ID token or Access Token not found in Google response.');
         }
-        console.log('Calling AuthContext googleSignup with token:', googleAccessToken);
+        console.log('Calling AuthContext googleSignup with token (substring):', tokenToSendToBackend.substring(0, 30) + '...');
         // Call the googleSignup function from AuthContext, which handles the backend call and state update
-        await googleSignup(googleAccessToken); // Pass only the ID token
+        await googleSignup(tokenToSendToBackend); // Pass only the ID token
         navigate('/dashboard');
-      } catch (err) {
-        console.error('Google sign-up failed:', err.response?.data?.message || error.message);
-        setError(error.response?.data?.message || 'Google sign-up failed');
+      } catch (error) {
+        console.error('Google sign-up failed:', err.response?.data?.message || err.message);
+        setError(err.response?.data?.message || 'Google sign-up failed. Please try again');
       }
     },
     onError: (errorResponse) => {
