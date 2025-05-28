@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import {
-
-} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -13,7 +10,7 @@ const History = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, LogOut, user } = useAuth();
     const navigate = useNavigate();
 
     const toggleSidebar = () => {
@@ -131,39 +128,39 @@ const History = () => {
                     <h1 className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center mb-6">
                         History
                     </h1>
-                    <div className={cardStyle + " p-6"}>
+                    <div className={cardStyle + " p-4 md:p-6"}>
                         <div className="overflow-x-auto">
-                            <table className="min-w-full">
+                            <table className="min-w-full divide-y divide-grey-200" >
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                        <th className="px-2 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                        <th className="px-2 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                        <th className="px-2 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                        <th className="px-2 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-2 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Details</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="bg-white divide-y divide-gray-100">
                                     {allHistory.length > 0 ? (
                                         allHistory.map((item, index) => {
                                             const isCalculation = item.type === 'calculation';
                                             return (
-                                                <tr key={index} className="text-sm border-b border-gray-100 last:border-b-0">
-                                                    <td className={getTransactionTypeColor(item.type) + " px-4 py-2 whitespace-nowrap"}>
+                                                <tr key={index} className="text-sm border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                                                    <td className={getTransactionTypeColor(item.type) + " px-2 py-2 whitespace-nowrap text-xs sm:text-sm"}>
                                                         {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                                                     </td>
-                                                    <td className="font-medium px-4 py-2 whitespace-nowrap text-gray-900">
+                                                    <td className="font-medium px-2 py-2 whitespace-nowrap text-gray-900 text-xs sm:text-sm">
                                                         {isCalculation
                                                             ? `${currencySymbols[selectedCurrency]}${convertToCurrency(item.result, selectedCurrency)}`
                                                             : `${currencySymbols[selectedCurrency]}${convertToCurrency(item.amount, selectedCurrency)}`}
                                                     </td>
-                                                    <td className="text-gray-500 px-4 py-2 whitespace-nowrap">
+                                                    <td className="text-gray-500 px-2 py-2 whitespace-nowrap text-xs sm:text-sm">
                                                         {new Date(item.timestamp).toLocaleString()}
                                                     </td>
-                                                    <td className={getStatusColor(item.status) + " px-4 py-2 whitespace-nowrap"}>
+                                                    <td className={getStatusColor(item.status) + " px-2 py-2 whitespace-nowrap text-xs sm:text-sm"}>
                                                         {item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || '-'}
                                                     </td>
-                                                    <td className="text-gray-700 px-4 py-2">
+                                                    <td className="text-gray-700 px-2 py-2 text-xs sm:text-sm">
                                                         {item.details}
                                                     </td>
                                                 </tr>
@@ -171,7 +168,7 @@ const History = () => {
                                         })
                                     ) : (
                                         <tr>
-                                            <td colSpan={5} className="text-center text-gray-400 py-4 text-base">No history.</td>
+                                            <td colSpan={5} className="text-center text-gray-400 py-4 text-sm">No history.</td>
                                         </tr>
                                     )}
                                 </tbody>
