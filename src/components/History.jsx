@@ -18,10 +18,10 @@ const History = () => {
     };
 
     const handleLogout = async () => {
-        console.log('Logout button clicked from Histoy!');
+        console.log('Logout button clicked from History!');
         await LogOut();
         navigate('/');
-        console.log('History Naviagated to / after logout.');
+        console.log('History Navigated to / after logout.');
     };
 
     useEffect(() => {
@@ -63,7 +63,7 @@ const History = () => {
 
     const convertToCurrency = (amount, currency) => {
         const exchangeRates = { USD: 1, NGN: 750, EUR: 0.95 };
-        if (typeof amount !== 'number'){
+        if (typeof amount !== 'number') {
             console.warn(`Attempted to convert non-number amount: ${amount}`);
             return 'N/A';
         }
@@ -103,34 +103,34 @@ const History = () => {
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">
             {/* Sidebar component */}
-            <Sidebar  
-             toggleSidebar={toggleSidebar}
-             isSidebarOpen={isSidebarOpen}  
-             setIsSidebarOpen={setIsSidebarOpen}
-             user={user}
-             handleLogout={handleLogout} 
+            <Sidebar
+                toggleSidebar={toggleSidebar}
+                isSidebarOpen={isSidebarOpen}
+                setIsSidebarOpen={setIsSidebarOpen}
+                user={user}
+                handleLogout={handleLogout}
             />
 
             {/* Main content area, pushed by sidebar when open */}
             <div className={`flex-1 flex flex-col transition-all duration-300
                 ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
                 {/* Navbar component */}
-               <Navbar
+                <Navbar
                     toggleSidebar={toggleSidebar}
                     isSidebarOpen={isSidebarOpen}
                     setIsSidebarOpen={setIsSidebarOpen}
                     selectedCurrency={selectedCurrency}
-                    setSelectedCurrency={setSelectedCurrency} 
+                    setSelectedCurrency={setSelectedCurrency}
                 />
-                
 
                 <div className="p-4 flex-grow overflow-y-auto mt-16">
                     <h1 className="text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center mb-6">
                         History
                     </h1>
                     <div className={cardStyle + " p-4 md:p-6"}>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-grey-200" >
+                        {/* Desktop/Tablet View - Table */}
+                        <div className="hidden md:block overflow-x-auto"> {/* Hide on small screens */}
+                            <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-2 py-2 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Type</th>
@@ -173,6 +173,40 @@ const History = () => {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile View - Cards */}
+                        <div className="md:hidden"> {/* Show only on small screens */}
+                            {allHistory.length > 0 ? (
+                                allHistory.map((item, index) => {
+                                    const isCalculation = item.type === 'calculation';
+                                    return (
+                                        <div key={index} className="bg-white border border-gray-200 rounded-md shadow-sm mb-4 p-4">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className={`${getTransactionTypeColor(item.type)} font-bold text-sm`}>
+                                                    {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                                </span>
+                                                <span className={`${getStatusColor(item.status)} text-sm font-medium`}>
+                                                    {item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || '-'}
+                                                </span>
+                                            </div>
+                                            <div className="text-gray-900 text-base font-semibold mb-1">
+                                                Amount: {isCalculation
+                                                    ? `${currencySymbols[selectedCurrency]}${convertToCurrency(item.result, selectedCurrency)}`
+                                                    : `${currencySymbols[selectedCurrency]}${convertToCurrency(item.amount, selectedCurrency)}`}
+                                            </div>
+                                            <div className="text-gray-600 text-sm mb-1">
+                                                Date: {new Date(item.timestamp).toLocaleString()}
+                                            </div>
+                                            <div className="text-gray-700 text-sm">
+                                                Details: {item.details}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-center text-gray-400 py-4 text-sm">No history.</p>
+                            )}
                         </div>
                     </div>
                 </div>
