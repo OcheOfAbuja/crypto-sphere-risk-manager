@@ -3,9 +3,46 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
+const DEFAULT_API_BASE_URL = 'http://localhost:5001';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
+console.log ('API Base URL being used:', apiBaseUrl);
+//console.log('AuthContext: API Base URL resolved from environment:', apiBaseUrl);
+
+if (!apiBaseUrl) {
+  console.error(
+    "CRITICAL: VITE_API_BASE_URL is not defined! API calls will fail.",
+    "Ensure it's set in your .env file locally and in Netlify environment variables for deployment."
+  );
+}
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: apiBaseUrl,
   withCredentials: true,
+});
+
+API.interceptors.request.use((config) => {
+  console.log(`Axios Request: ${config.method.toUpperCase()} ${config.baseURL} ${config.url}`);
+  return config;
+});
+
+API.interceptors.response.use((response) => {
+  console.log(`Axios Response: ${response.config.method.toUpperCase()} ${response.config.baseURL} ${response.config.url} - Status: ${response.status}`);
+  return response;
+},
+(error) => {
+  if (error.response) {
+    console.error(`Axios Response Error (${error.response.status}): ${error.response.config.method.toUpperCase()} ${error.config.baseURL} ${error.config.baseURL} ${error.config.url}`, error.response.data );
+    if (error.response.status === 401) {
+      console.warn('Unauthorized request detected. User migt need to re-login.');
+    } else if (error.response.status === 404) {
+      console.error(`404 Not Found: Check the API endpoint path and the VITE_API_BASE_URL.`);
+    }
+  } else if (error.request) {
+    console.error('Axios No Response Error: The request was made but no response was received. Check network connectivity or backend server status.', error.message);
+  } else {
+    console.error('Axios Request Setup Error:', error.message);
+  }
+  return Promise.reject(error);
 });
 
 export const AuthProvider = ({ children }) => {

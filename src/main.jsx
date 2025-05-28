@@ -8,15 +8,8 @@ import { AuthProvider } from './context/AuthContext';
 import { NavigationProvider } from './context/NavigationContext';
 import { BrowserRouter } from 'react-router-dom';
 
-// --- ROBUSTNESS IMPROVEMENTS START HERE ---
-
-// Define a fallback for the Google Client ID
-// This is your known valid client ID from your Google Cloud Console
-// It acts as a safety net if import.meta.env.VITE_GOOGLE_CLIENT_ID is somehow undefined
-const DEFAULT_GOOGLE_CLIENT_ID = '647555831129-lciav0j4hotvj6omdu1p3ra197mkq520.apps.googleusercontent.com';
-
 // Get the Google Client ID from environment variables, with a fallback
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ;
 
 // Add a console log to see which Client ID is being used in the browser console
 // This is extremely helpful for debugging deployed environments
